@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VMKG — Finance MIS</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0A0E1A;--surface:#111827;--surface2:#1A2235;--border:#1E2D45;--border2:#253550;--text:#E8EDF5;--text2:#8A9BBF;--text3:#4A5878;--gold:#D4A843;--gold2:#F5C842;--teal:#1DB8A8;--purple:#7C5CBF;--green:#22C97A;--red:#F05555;--amber:#F5A623;--blue:#4A9EF5;--hdepl:#1DB8A8;--bdepl:#7C5CBF;--vmbe:#22C97A;--tcpl:#F5A623;--vmf:#4A9EF5;--font-d:'Playfair Display',Georgia,serif;--font-b:'Outfit',sans-serif;--font-m:'JetBrains Mono',monospace;--r:8px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:13px;display:flex;min-height:100vh;overflow-x:hidden}
+.sidebar{width:220px;min-width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;z-index:100}
+.brand{padding:22px 18px 16px;border-bottom:1px solid var(--border)}
+.brand-logo{font-family:var(--font-d);font-size:22px;color:var(--text)}
+.brand-logo em{color:var(--gold);font-style:normal}
+.brand-sub{font-family:var(--font-m);font-size:9px;color:var(--text3);letter-spacing:0.15em;text-transform:uppercase;margin-top:4px}
+.brand-fy{font-family:var(--font-m);font-size:10px;color:var(--gold);margin-top:3px}
+.nav-section{padding:14px 0 4px}
+.nav-label{font-family:var(--font-m);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);padding:0 16px;margin-bottom:4px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 16px;cursor:pointer;font-size:12px;font-weight:500;color:var(--text2);border-left:2px solid transparent;transition:all 0.15s}
+.nav-item:hover{background:rgba(255,255,255,0.04);color:var(--text)}
+.nav-item.active{background:rgba(212,168,67,0.08);color:var(--gold);border-left-color:var(--gold)}
+.nav-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sidebar-footer{margin-top:auto;padding:14px 16px;border-top:1px solid var(--border)}
+.sync-row{display:flex;align-items:center;gap:6px}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--red);flex-shrink:0}
+.sync-dot.live{background:var(--green);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.sync-text{font-family:var(--font-m);font-size:9px;color:var(--text3)}
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.page-title{font-family:var(--font-d);font-size:20px;color:var(--text)}
+.page-title span{font-family:var(--font-b);font-size:12px;color:var(--text3);font-weight:400;margin-left:10px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r);font-family:var(--font-b);font-size:11px;font-weight:600;cursor:pointer;border:none;transition:all 0.15s}
+.btn-primary{background:var(--gold);color:#0A0E1A}
+.btn-primary:hover{background:var(--gold2)}
+.btn-ghost{background:var(--surface2);color:var(--text2);border:1px solid var(--border2)}
+.btn-ghost:hover{color:var(--text)}
+.btn svg{width:12px;height:12px}
+.content{padding:24px 28px;flex:1}
+.section{display:none}
+.section.active{display:block}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px}
+.card-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-family:var(--font-d);font-size:15px;color:var(--text)}
+.card-sub{font-family:var(--font-m);font-size:9px;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase}
+.rag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-family:var(--font-m);font-size:9px;font-weight:500}
+.rag-green{background:rgba(34,201,122,0.15);color:var(--green)}
+.rag-amber{background:rgba(245,166,35,0.15);color:var(--amber)}
+.rag-red{background:rgba(240,85,85,0.15);color:var(--red)}
+.rag-dot{width:5px;height:5px;border-radius:50%}
+.rag-green .rag-dot{background:var(--green)}
+.rag-amber .rag-dot{background:var(--amber)}
+.rag-red .rag-dot{background:var(--red)}
+.command-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.cmd-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;position:relative;overflow:hidden}
+.cmd-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.cmd-card.gold::after{background:var(--gold)}
+.cmd-card.green::after{background:var(--green)}
+.cmd-card.red::after{background:var(--red)}
+.cmd-card.blue::after{background:var(--blue)}
+.cmd-label{font-family:var(--font-m);font-size:9px;color:var(--text3);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px}
+.cmd-value{font-family:var(--font-d);font-size:24px;color:var(--text);line-height:1}
+.cmd-sub{font-family:var(--font-m);font-size:10px;color:var(--text3);margin-top:6px}
+.cmd-delta{font-family:var(--font-m);font-size:10px;margin-top:4px;font-weight:500}
+.entity-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px}
+.entity-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;border-top:2px solid;transition:transform 0.15s;cursor:pointer}
+.entity-card:hover{transform:translateY(-2px)}
+.entity-card.hdepl{border-top-color:var(--hdepl)}.entity-card.bdepl{border-top-color:var(--bdepl)}.entity-card.vmbe{border-top-color:var(--vmbe)}.entity-card.tcpl{border-top-color:var(--tcpl)}.entity-card.vmf{border-top-color:var(--vmf)}
+.ec-name{font-family:var(--font-m);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.ec-net{font-family:var(--font-d);font-size:19px;line-height:1;margin-bottom:4px}
+.ec-net.pos{color:var(--green)}.ec-net.neg{color:var(--red)}.ec-net.zero{color:var(--text3)}
+.ec-label{font-size:10px;color:var(--text3);margin-bottom:10px}
+.ec-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.ec-row-label{font-size:10px;color:var(--text2)}
+.ec-pct{font-family:var(--font-m);font-size:10px;font-weight:500}
+.progress-bar{height:3px;background:var(--border2);border-radius:99px;overflow:hidden;margin-top:2px;margin-bottom:6px}
+.progress-fill{height:100%;border-radius:99px;transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1)}
+.obl-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.obl-stat{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.obl-stat:last-child{border-bottom:none}
+.obl-stat-label{font-size:12px;color:var(--text2)}
+.obl-stat-value{font-family:var(--font-m);font-size:12px;font-weight:500}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:9px 14px;text-align:right;font-family:var(--font-m);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);background:var(--surface2);border-bottom:1px solid var(--border);white-space:nowrap}
+th:first-child{text-align:left}
+td{padding:9px 14px;border-bottom:1px solid rgba(30,45,69,0.8);text-align:right;font-family:var(--font-m);font-size:12px;white-space:nowrap;color:var(--text2)}
+td:first-child{text-align:left;font-family:var(--font-b);font-weight:500;font-size:12px;color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr.total-row td{background:var(--surface2);color:var(--text);font-weight:700;border-top:1px solid var(--border2)}
+.pos-cell{color:var(--green)!important;font-weight:600}.neg-cell{color:var(--red)!important;font-weight:600}.muted-cell{color:var(--text3)!important}
+.var-good{color:var(--green)!important;font-weight:600}.var-bad{color:var(--red)!important;font-weight:600}
+.entity-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:20px}
+.etab{padding:10px 18px;font-size:12px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;margin-bottom:-1px}
+.etab:hover{color:var(--text)}.etab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.ratio-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.ratio-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px}
+.ratio-label{font-family:var(--font-m);font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--text3);margin-bottom:8px}
+.ratio-value{font-family:var(--font-d);font-size:22px;line-height:1;margin-bottom:4px}
+.ratio-note{font-size:11px;color:var(--text3)}
+.loader{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;transition:opacity 0.5s}
+.loader.hidden{opacity:0;pointer-events:none}
+.loader-logo{font-family:var(--font-d);font-size:40px;color:var(--text);margin-bottom:8px}
+.loader-logo em{color:var(--gold);font-style:normal}
+.loader-sub{font-family:var(--font-m);font-size:10px;color:var(--text3);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:32px}
+.loader-bar{width:180px;height:1px;background:var(--border2);border-radius:99px;overflow:hidden}
+.loader-fill{height:100%;background:var(--gold);animation:load 2.5s ease-in-out}
+@keyframes load{0%{width:0}100%{width:100%}}
+.loader-msg{font-family:var(--font-m);font-size:9px;color:var(--text3);margin-top:10px}
+.err-banner{background:rgba(240,85,85,0.1);border:1px solid rgba(240,85,85,0.3);border-radius:var(--r);padding:10px 16px;margin-bottom:16px;font-size:11px;color:var(--red);display:none;font-family:var(--font-m)}
+.err-banner.show{display:block}
+.info-note{background:rgba(212,168,67,0.08);border:1px solid rgba(212,168,67,0.2);border-radius:var(--r);padding:10px 16px;margin-bottom:16px;font-size:11px;color:var(--gold);font-family:var(--font-m)}
+.sheet-links{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.sheet-link{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:4px;font-family:var(--font-m);font-size:10px;color:var(--text2);cursor:pointer;text-decoration:none;transition:all 0.15s}
+.sheet-link:hover{color:var(--gold);border-color:var(--gold)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.fade{animation:fadeUp 0.4s ease forwards}
+</style>
+</head>
+<body>
+<div class="loader" id="loader">
+  <div class="loader-logo">VMK<em>G</em></div>
+  <div class="loader-sub">Finance MIS · FY 2026–27</div>
+  <div class="loader-bar"><div class="loader-fill"></div></div>
+  <div class="loader-msg" id="loaderMsg">Connecting to Google Sheets…</div>
+</div>
+<div class="sidebar">
+  <div class="brand">
+    <div class="brand-logo">VMK<em>G</em></div>
+    <div class="brand-sub">Victor Manickam Group</div>
+    <div class="brand-fy">FY 2026–27</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Overview</div>
+    <div class="nav-item active" data-sec="cmd" onclick="nav(this)"><span class="nav-dot" style="background:var(--gold)"></span>Command Centre</div>
+    <div class="nav-item" data-sec="pl" onclick="nav(this)"><span class="nav-dot" style="background:var(--teal)"></span>P&amp;L by Entity</div>
+    <div class="nav-item" data-sec="variance" onclick="nav(this)"><span class="nav-dot" style="background:var(--purple)"></span>Budget vs Actual</div>
+    <div class="nav-item" data-sec="ratios" onclick="nav(this)"><span class="nav-dot" style="background:var(--blue)"></span>Financial Health</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Obligations</div>
+    <div class="nav-item" data-sec="liabilities" onclick="nav(this)"><span class="nav-dot" style="background:var(--red)"></span>Liabilities</div>
+    <div class="nav-item" data-sec="emis" onclick="nav(this)"><span class="nav-dot" style="background:var(--amber)"></span>EMIs &amp; Loans</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Entities</div>
+    <div class="nav-item" data-sec="hdepl" onclick="nav(this)"><span class="nav-dot" style="background:var(--hdepl)"></span>HDEPL</div>
+    <div class="nav-item" data-sec="bdepl" onclick="nav(this)"><span class="nav-dot" style="background:var(--bdepl)"></span>BDEPL</div>
+    <div class="nav-item" data-sec="vmbe" onclick="nav(this)"><span class="nav-dot" style="background:var(--vmbe)"></span>VMBE</div>
+    <div class="nav-item" data-sec="tcpl" onclick="nav(this)"><span class="nav-dot" style="background:var(--tcpl)"></span>TCPL</div>
+    <div class="nav-item" data-sec="vmf" onclick="nav(this)"><span class="nav-dot" style="background:var(--vmf)"></span>VMF</div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="sync-row"><div class="sync-dot" id="syncDot"></div><div class="sync-text" id="syncText">Connecting…</div></div>
+  </div>
+</div>
+<div class="main">
+  <div class="topbar">
+    <div class="page-title" id="pageTitle">Command Centre <span>Group Financial Health</span></div>
+    <div class="topbar-right">
+      <button class="btn btn-ghost" onclick="window.open('https://docs.google.com/spreadsheets/d/1QFOmgb9LnYgQUZ6xdFjwxH5BSUdl-QQ2xOiSdYVwUco/edit','_blank')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>Open Sheet
+      </button>
+      <button class="btn btn-primary" onclick="loadData()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 4v5h5M20 20v-5h-5M4 9a8 8 0 0114.54-3M20 15a8 8 0 01-14.54 3"/></svg>Refresh
+      </button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="err-banner" id="errBanner"></div>
+    <div class="section active" id="sec-cmd">
+      <div class="command-strip" id="cmdStrip"></div>
+      <div class="entity-grid" id="entityGrid"></div>
+      <div class="obl-grid">
+        <div class="card"><div class="card-header"><div class="card-title">Liability Position</div><div class="card-sub">Live from Sheet</div></div><div style="padding:16px 18px" id="liabSummary"></div></div>
+        <div class="card"><div class="card-header"><div class="card-title">EMI Obligations</div><div class="card-sub">This month</div></div><div style="padding:16px 18px" id="emiSummary"></div></div>
+      </div>
+      <div class="card"><div class="card-header"><div class="card-title">Group P&amp;L Snapshot</div><div class="card-sub">Actuals vs Target — FY 2026–27</div></div>
+      <div class="table-wrap"><table><thead><tr><th>Entity</th><th>Rev Collected</th><th>Rev Target</th><th>Achievement</th><th>Expenses</th><th>Net Position</th><th>GM%</th><th>Status</th></tr></thead><tbody id="groupSnapshot"></tbody></table></div></div>
+    </div>
+    <div class="section" id="sec-pl"><div class="entity-tabs" id="plTabs"></div><div id="plContent"></div></div>
+    <div class="section" id="sec-variance">
+      <div class="info-note">Budget = locked FY26-27 monthly targets. Actuals = live from Sheet. Green ≥90% · Amber 70–90% · Red &lt;70%</div>
+      <div class="entity-tabs" id="varTabs"></div><div id="varContent"></div>
+    </div>
+    <div class="section" id="sec-ratios">
+      <div class="ratio-grid" id="ratioGrid"></div>
+      <div class="card"><div class="card-header"><div class="card-title">Entity Health Scorecard</div></div>
+      <div class="table-wrap"><table><thead><tr><th>Entity</th><th>GM%</th><th>Rev Achievement</th><th>Fixed Cost Cover</th><th>Net Margin</th><th>Health</th></tr></thead><tbody id="scorecardBody"></tbody></table></div></div>
+      <div class="card"><div class="card-header"><div class="card-title">Liability & Debt Analysis</div></div><div style="padding:16px 18px" id="debtAnalysis"></div></div>
+    </div>
+    <div class="section" id="sec-liabilities">
+      <div class="sheet-links">
+        <a class="sheet-link" href="https://docs.google.com/spreadsheets/d/1QFOmgb9LnYgQUZ6xdFjwxH5BSUdl-QQ2xOiSdYVwUco/edit" target="_blank">✏ Edit Liabilities in Sheet</a>
+      </div>
+      <div id="liabTotalBanner"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div class="card"><div class="card-header"><div class="card-title">Clearance Runway</div></div><div style="padding:16px 18px" id="liabRunway"></div></div>
+        <div class="card"><div class="card-header"><div class="card-title">P1 — Pay This Month</div></div><div class="table-wrap"><table><thead><tr><th>Creditor</th><th>Category</th><th>Amount</th></tr></thead><tbody id="liabP1"></tbody></table></div></div>
+      </div>
+      <div class="card"><div class="card-header"><div class="card-title">Full Liability Ledger</div><div class="card-sub">Update in Sheet to refresh</div></div><div class="table-wrap"><table><thead><tr><th>Creditor</th><th>Category</th><th>Priority</th><th>Pending</th><th>Action</th></tr></thead><tbody id="liabFull"></tbody></table></div></div>
+      <div class="card"><div class="card-header"><div class="card-title">Opportunity Cost @ 18% p.a.</div></div><div style="padding:16px 18px" id="liabOpp"></div></div>
+    </div>
+    <div class="section" id="sec-emis">
+      <div class="sheet-links">
+        <a class="sheet-link" href="https://docs.google.com/spreadsheets/d/1QFOmgb9LnYgQUZ6xdFjwxH5BSUdl-QQ2xOiSdYVwUco/edit" target="_blank">✏ Edit EMIs in Sheet</a>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px" id="emiCards"></div>
+      <div class="card"><div class="card-header"><div class="card-title">EMI Schedule</div><div class="card-sub">Live from EMIs & Loans tab</div></div><div class="table-wrap"><table><thead><tr><th>Loan</th><th>Entity</th><th>EMI / Month</th><th>Due Date</th><th>Notes</th></tr></thead><tbody id="emiTable"></tbody></table></div></div>
+      <div class="card"><div class="card-header"><div class="card-title">Debt Service Analysis</div></div><div style="padding:16px 18px" id="emiDebt"></div></div>
+    </div>
+    <div class="section" id="sec-hdepl"><div id="hdeplDetail"></div></div>
+    <div class="section" id="sec-bdepl"><div id="bdeplDetail"></div></div>
+    <div class="section" id="sec-vmbe"><div id="vmbeDetail"></div></div>
+    <div class="section" id="sec-tcpl"><div id="tcplDetail"></div></div>
+    <div class="section" id="sec-vmf"><div id="vmfDetail"></div></div>
+  </div>
+</div>
+<script>
+const APPS_URL='https://script.google.com/macros/s/AKfycbxu661ide7jT7wp51G0qNr5lmlwRaQV3iy_h-OZwWQInaDKtZ74U4Jm5FySkp7za8E_Ww/exec';
+const MONTHS=['Apr-26','May-26','Jun-26','Jul-26','Aug-26','Sep-26','Oct-26','Nov-26','Dec-26','Jan-27','Feb-27','Mar-27'];
+const MON_S=['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
+const EC={HDEPL:'#1DB8A8',BDEPL:'#7C5CBF',VMBE:'#22C97A',TCPL:'#F5A623',VMF:'#4A9EF5'};
+const TGT={
+  HDEPL:{rev:2689250,exp:944439,net:1744811,
+    incLines:['PFL Online','PFL Offline','PFL O2O','CWL','Fellowship','KS','PAT','Other Income'],
+    incBudgets:[681750,765000,127500,252083,151667,180000,531250,0],
+    expHeads:['Salaries — ops team','Director Remuneration','EMIs','Professional Fees','Office Expenses','Business Development','Marketing','Rent 208','Liability Clearance','Other expenses'],
+    expBudgets:[203000,275000,65828,40000,52711,12900,50000,45000,200000,0]},
+  BDEPL:{rev:530407,exp:249814,net:280593,
+    incLines:['Shine Business Empowerment','Gain Workshop','Sales Empowerment Program','Other income'],
+    incBudgets:[279833,162074,88500,0],
+    expHeads:['Salaries','Director Remuneration','Rent','EMIs','Professional Fees','Office Expenses','Marketing','Other expense'],
+    expBudgets:[90000,60000,45000,6914,15000,17900,15000,0]},
+  VMBE:{rev:513333,exp:323819,net:189514,
+    incLines:['Neelam','Syscon','Foresight','Therefore','New Client 1','New Client 2','Other income'],
+    incBudgets:[200000,83333,80000,50000,50000,50000,0],
+    expHeads:['TDS (10%)','Siddhant professional fee','Home rent','Fuel','Driver salary','EA staff','Silvester salary','Loan EMI','Other expense'],
+    expBudgets:[51333,70000,90000,25000,25000,15000,30000,17486,0]},
+  TCPL:{rev:2489345,exp:1824478,net:664867,
+    incLines:['D2B Sales','D2C Sales','D2I Sales','Design Services','Consulting','Other income'],
+    incBudgets:[2318750,158095,0,8333,4167,0],
+    expHeads:['Manufacturing','Delivery','Salaries','EMIs','Office Rent','Director Remuneration','Marketing','Office Supplies','Legal / Audit','Savings & Reserves','Other expense'],
+    expBudgets:[1238423,74305,37500,30000,26750,50000,61667,10000,4167,291667,0]},
+  VMF:{rev:557417,exp:325000,net:232417,
+    incLines:['FLIP (Internship Program)','PFL Scholarship Batch','CfH PCOD/PCOS','GAIN Workshop','Donations','Sponsorships','Other income'],
+    incBudgets:[75000,41667,56250,21500,13000,350000,0],
+    expHeads:['VMF Conference','FAB Conference','FLIP Program Costs','PFL Scholarship Costs','CfH Program Costs','Research Papers','Annual Office/Admin','Sponsors Drive','Other utilisation'],
+    expBudgets:[8333,16667,29167,25000,20833,50000,150000,25000,0]}
+};
+let L={actuals:{},entityNets:{HDEPL:[],BDEPL:[],VMBE:[],TCPL:[],VMF:[]},liabRows:[],liabTotal:0,emiRows:[],loaded:false};
+function inr(n){if(n===null||n===undefined||n==='')return'—';const abs=Math.abs(n);let s;if(abs>=10000000)s='₹'+(abs/10000000).toFixed(2)+' Cr';else if(abs>=100000)s='₹'+(abs/100000).toFixed(2)+'L';else s='₹'+Math.round(abs).toLocaleString('en-IN');return n<0?'('+s+')':s}
+function inrF(n){if(!n&&n!==0)return'—';const s='₹'+Math.abs(Math.round(n)).toLocaleString('en-IN');return n<0?'('+s+')':s}
+function pv(v){return parseFloat(String(v).replace(/[^0-9.\-]/g,''))||0}
+function A12(){return Array(12).fill(0)}
+function sumArr(a){return(a||[]).reduce((s,v)=>s+v,0)}
+function gA(lbl){return L.actuals[lbl]||A12()}
+function sumA(lbl){return sumArr(gA(lbl))}
+function rag(p){return p>=90?'green':p>=70?'amber':'red'}
+function ragPill(p){const r=rag(p);return`<span class="rag rag-${r}"><span class="rag-dot"></span>${p.toFixed(1)}%</span>`}
+function priTag(p){const raw=String(p||'').split(/\s*[—–-]\s*/)[0].trim();const c={P1:'rag-red',P2:'rag-amber'}[raw]||'';return`<span class="rag ${c}" style="font-size:9px">${raw}</span>`}
+const PT={cmd:'Command Centre',pl:'P&L by Entity',variance:'Budget vs Actual',ratios:'Financial Health',liabilities:'Liabilities',emis:'EMIs & Loans',hdepl:'HDEPL',bdepl:'BDEPL',vmbe:'VMBE',tcpl:'TCPL',vmf:'VMF'};
+const PS={cmd:'Group Financial Health',pl:'All 5 Entities — Actuals',variance:'Target vs Actual Deviation',ratios:'Ratios & Scorecard',liabilities:'Creditor Ledger',emis:'Loan Obligations',hdepl:'Human Development & Education',bdepl:'Business Development & Education',vmbe:'Retainer Business',tcpl:'Trox Creations',vmf:'Foundation (Section 8)'};
+function nav(el){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));el.classList.add('active');const sec=el.dataset.sec;document.getElementById('sec-'+sec).classList.add('active');document.getElementById('pageTitle').innerHTML=`${PT[sec]||sec} <span>${PS[sec]||''}</span>`}
+async function fetchSheet(){const r=await fetch(APPS_URL+'?t='+new Date().getTime());if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();if(j.status!=='ok')throw new Error('Script error');return j.data}
+function parseSheet(data){
+  const iR=Array.isArray(data)?data:(data['Input']||[]);
+  const lR=Array.isArray(data)?[]:(data['Liabilities']||[]);
+  const eR=Array.isArray(data)?[]:(data['EMIs & Loans']||[]);
+  const fi=l=>iR.findIndex(r=>r[0]&&String(r[0]).trim()===l);
+  const gv=l=>{const ri=fi(l);return ri>=0?iR[ri].slice(1,13).map(pv):null};
+  const lbls=['PFL Online','PFL Offline','PFL O2O','CWL','Fellowship','KS','PAT','Other Income','Total HDEPL Income','Salaries — ops team','Director remuneration','Loan EMI — HDFC','Loan EMI — small','Loan EMI — TPO CC','Loan EMI — RBL','Professional fees','Marketing','Rent 208','Liability clearance','Office expenses','Other expenses','Total HDEPL Expenses','Shine Business Empowerment','Gain Workshop','Sales Empowerment Program','Other income','Total BDEPL Income','Salaries','Rent','Electricity','Groww EMI','Other expense','Total BDEPL Expenses','Neelam','Syscon','Foresight','Therefore','New Client 1','New Client 2','Total VMBE Income','TDS (10%)','Siddhant professional fee','Home rent','Fuel','Driver salary','EA staff','Silvester salary','Loan EMI','Total VMBE Expenses','D2B Sales','D2C Sales','Design Services','Consulting','Total TCPL Income','Manufacturing','Company Savings & Reserves','Delivery','Director Remuneration','Loans / EMIs','Office Rent','Office Supplies','Legal / Audit','Total TCPL Expenses','FLIP (Internship Program)','PFL Scholarship Batch','CfH PCOD/PCOS','GAIN Workshop','Donations','Sponsorships','Total VMF Fund Generation','VMF Conference','FAB Conference','FLIP Program Costs','PFL Scholarship Costs','CfH Program Costs','Research Paper Publications','Annual Office/Admin','Annual Sponsors Drive Expenses','Total VMF Utilisation','Direct costs — leading fee','Direct costs — materials','Direct costs — venue','Direct costs — food','HDEPL NET','BDEPL NET','VMBE NET (Surplus to Victor)','TCPL NET (pre-tax)','VMF SURPLUS (Tax Exempt)'];
+  L.actuals={};lbls.forEach(l=>{const v=gv(l);if(v)L.actuals[l]=v});
+  L.entityNets={HDEPL:gv('HDEPL NET')||A12(),BDEPL:gv('BDEPL NET')||A12(),VMBE:gv('VMBE NET (Surplus to Victor)')||A12(),TCPL:gv('TCPL NET (pre-tax)')||A12(),VMF:gv('VMF SURPLUS (Tax Exempt)')||A12()};
+  if(lR.length>4){const rows=[];let tot=0;lR.forEach((row,i)=>{if(i<4)return;const c=String(row[0]||'').trim();if(!c||c.toUpperCase().includes('TOTAL')||c.toUpperCase().includes('CLEARANCE'))return;const a=pv(row[2]);const p=String(row[3]||'').split(/\s*[—–-]\s*/)[0].trim();if(c&&a>0){rows.push({creditor:c,cat:String(row[1]||'').trim(),amt:a,pri:p,action:String(row[4]||'').trim()});tot+=a}});if(rows.length>0){L.liabRows=rows;L.liabTotal=tot}}
+  if(eR.length>3){const rows=[];eR.forEach((row,i)=>{if(i<3)return;const l=String(row[0]||'').trim();if(!l||l.toUpperCase().includes('TOTAL')||l.toUpperCase().includes('OPPORTUNITY'))return;const e=pv(row[2]);if(l&&e>0)rows.push({loan:l,entity:String(row[1]||'').trim(),emi:e,due:String(row[3]||'').trim(),note:String(row[4]||'').trim()})});if(rows.length>0)L.emiRows=rows}
+  L.loaded=true}
+function renderCmd(){
+  const ents=['HDEPL','BDEPL','VMBE','TCPL','VMF'];
+  const iK={HDEPL:'Total HDEPL Income',BDEPL:'Total BDEPL Income',VMBE:'Total VMBE Income',TCPL:'Total TCPL Income',VMF:'Total VMF Fund Generation'};
+  const eK={HDEPL:'Total HDEPL Expenses',BDEPL:'Total BDEPL Expenses',VMBE:'Total VMBE Expenses',TCPL:'Total TCPL Expenses',VMF:'Total VMF Utilisation'};
+  const tAR=ents.reduce((s,e)=>s+sumA(iK[e]),0);
+  const tAE=ents.reduce((s,e)=>s+sumA(eK[e]),0);
+  const tAN=ents.reduce((s,e)=>s+sumArr(L.entityNets[e]),0);
+  const tTR=ents.reduce((s,e)=>s+TGT[e].rev*12,0);
+  const emiData=L.emiRows.length>0?L.emiRows:[{entity:'HDEPL',emi:32151},{entity:'HDEPL',emi:7264},{entity:'HDEPL',emi:17000},{entity:'HDEPL',emi:9413},{entity:'HDEPL',emi:125000},{entity:'BDEPL',emi:6914},{entity:'VMBE',emi:17486}];
+  const emiTot=emiData.reduce((s,e)=>s+e.emi,0);
+  const lt=L.liabTotal||3188883;
+  const bm=lt>0?Math.ceil(lt/200000):0;
+  const rp=tTR>0?(tAR/tTR)*100:0;
+  document.getElementById('cmdStrip').innerHTML=`
+    <div class="cmd-card gold fade"><div class="cmd-label">Group Revenue YTD</div><div class="cmd-value">${inr(tAR)}</div><div class="cmd-sub">Target: ${inr(tTR)}</div><div class="cmd-delta" style="color:${rp>=90?'var(--green)':rp>=70?'var(--amber)':'var(--red)'}">${rp.toFixed(1)}% of annual target</div></div>
+    <div class="cmd-card ${tAN>=0?'green':'red'} fade"><div class="cmd-label">Group Net Position</div><div class="cmd-value" style="color:${tAN>=0?'var(--green)':'var(--red)'}">${inr(tAN)}</div><div class="cmd-sub">After all expenses YTD</div><div class="cmd-delta" style="color:var(--text3)">Exp paid: ${inr(tAE)}</div></div>
+    <div class="cmd-card red fade"><div class="cmd-label">Total Liabilities</div><div class="cmd-value" style="color:var(--red)">${inr(lt)}</div><div class="cmd-sub">@ ₹2L/month clearance</div><div class="cmd-delta" style="color:var(--amber)">${bm} months to clear</div></div>
+    <div class="cmd-card blue fade"><div class="cmd-label">Monthly EMI Obligation</div><div class="cmd-value">${inr(emiTot)}</div><div class="cmd-sub">Across all entities</div><div class="cmd-delta" style="color:var(--text3)">Annual: ${inr(emiTot*12)}</div></div>`;
+  const dcLabels=['Direct costs — leading fee','Direct costs — materials','Direct costs — venue','Direct costs — food'];
+  document.getElementById('entityGrid').innerHTML=ents.map(e=>{
+    const aR=sumA(iK[e]),aE=sumA(eK[e]),aN=sumArr(L.entityNets[e]),tR=TGT[e].rev*12;
+    const hasDC=['HDEPL','BDEPL'].includes(e);
+    const dcTotal=hasDC?dcLabels.reduce((s,l)=>s+sumA(l),0):0;
+    const gp=hasDC?aR-dcTotal:0;
+    const gm=hasDC&&aR>0?(gp/aR)*100:aR>0?((aR-aE)/aR)*100:0;
+    const rp=tR>0?Math.min((aR/tR)*100,150):0;
+    const ep=TGT[e].exp*12>0?Math.min((aE/(TGT[e].exp*12))*100,150):0;
+    const fc=rp>=90?'var(--green)':rp>=70?'var(--amber)':'var(--red)';
+    const nc=aN>0?'pos':aN<0?'neg':'zero';
+    const gmLabel=hasDC?'GM% (after direct costs)':'Net Margin';
+    return`<div class="entity-card ${e.toLowerCase()} fade" onclick="document.querySelector('[data-sec=${e.toLowerCase()}]').click()">
+      <div class="ec-name">${e}</div><div class="ec-net ${nc}">${inr(aN)}</div>
+      <div class="ec-label">Net YTD${aN===0?' — no data':''}</div>
+      <div class="ec-row"><span class="ec-row-label">Revenue</span><span class="ec-pct" style="color:${fc}">${rp.toFixed(0)}%</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(rp,100)}%;background:${fc}"></div></div>
+      <div class="ec-row"><span class="ec-row-label">Expenses</span><span class="ec-pct" style="color:var(--text3)">${ep.toFixed(0)}%</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(ep,100)}%;background:var(--text3)"></div></div>
+      <div class="ec-row" style="margin-top:6px"><span class="ec-row-label">${gmLabel}</span><span class="ec-pct" style="color:${gm>=40?'var(--green)':gm>=20?'var(--amber)':'var(--red)'}">${aR>0?gm.toFixed(1)+'%':'—'}</span></div>
+    </div>`;
+  }).join('');
+  document.getElementById('liabSummary').innerHTML=`<div class="obl-stat"><span class="obl-stat-label">Total outstanding</span><span class="obl-stat-value" style="color:var(--red)">${inrF(lt)}</span></div><div class="obl-stat"><span class="obl-stat-label">Opp. cost / month @ 18%</span><span class="obl-stat-value" style="color:var(--amber)">${inrF(Math.round(lt*0.18/12))}</span></div><div class="obl-stat"><span class="obl-stat-label">Clearance budget / month</span><span class="obl-stat-value">₹2,00,000</span></div><div class="obl-stat"><span class="obl-stat-label">Months to clear</span><span class="obl-stat-value" style="color:var(--amber)">${bm} months</span></div><div class="obl-stat"><span class="obl-stat-label">P1 creditors</span><span class="obl-stat-value">${L.liabRows.filter(l=>l.pri==='P1').length} creditors</span></div>`;
+  document.getElementById('emiSummary').innerHTML=`<div class="obl-stat"><span class="obl-stat-label">Total EMI / month</span><span class="obl-stat-value" style="color:var(--red)">${inrF(emiTot)}</span></div><div class="obl-stat"><span class="obl-stat-label">Annual EMI burden</span><span class="obl-stat-value">${inrF(emiTot*12)}</span></div><div class="obl-stat"><span class="obl-stat-label">HDEPL EMI</span><span class="obl-stat-value">${inrF(emiData.filter(e=>e.entity==='HDEPL').reduce((s,e)=>s+e.emi,0))}</span></div><div class="obl-stat"><span class="obl-stat-label">Active loan obligations</span><span class="obl-stat-value">${emiData.length}</span></div>`;
+  document.getElementById('groupSnapshot').innerHTML=ents.map(e=>{
+    const aR=sumA(iK[e]),aE=sumA(eK[e]),aN=sumArr(L.entityNets[e]),tR=TGT[e].rev*12;
+    const hasDC=['HDEPL','BDEPL'].includes(e);
+    const dcTotal=hasDC?dcLabels.reduce((s,l)=>s+sumA(l),0):0;
+    const gp=hasDC?aR-dcTotal:0;
+    const gm=hasDC&&aR>0?(gp/aR)*100:aR>0?((aR-aE)/aR)*100:0;
+    const ach=tR>0?(aR/tR)*100:0;
+    return`<tr><td style="color:${EC[e]};font-weight:600">${e}</td><td class="${aR>0?'':'muted-cell'}">${inr(aR)}</td><td class="muted-cell">${inr(tR)}</td><td>${aR>0?ragPill(ach):'<span class="muted-cell">No data</span>'}</td><td class="${aE>0?'neg-cell':'muted-cell'}">${inr(aE)}</td><td class="${aN>0?'pos-cell':aN<0?'neg-cell':'muted-cell'}">${inr(aN)}</td><td class="${gm>=40?'pos-cell':gm>=20?'':'neg-cell'}">${aR>0?gm.toFixed(1)+'%':'—'}</td><td>${aR>0?ragPill(ach):'<span class="muted-cell">—</span>'}</td></tr>`;
+  }).join('')+`<tr class="total-row"><td>GROUP TOTAL</td><td>${inr(ents.reduce((s,e)=>s+sumA(iK[e]),0))}</td><td>${inr(tTR)}</td><td>${tAR>0?ragPill(tAR/tTR*100):'—'}</td><td class="neg-cell">${inr(tAE)}</td><td class="${tAN>=0?'pos-cell':'neg-cell'}">${inr(tAN)}</td><td>—</td><td>—</td></tr>`}
+function renderPL(){
+  const tabs=['HDEPL','BDEPL','VMBE','TCPL','VMF'];
+  document.getElementById('plTabs').innerHTML=tabs.map((e,i)=>`<div class="etab${i===0?' active':''}" onclick="switchPL(this,'${e}')">${e}</div>`).join('');
+  switchPL(document.querySelector('#plTabs .etab'),'HDEPL')}
+function switchPL(el,entity){
+  document.querySelectorAll('#plTabs .etab').forEach(t=>t.classList.remove('active'));el.classList.add('active');
+  const color=EC[entity],tgt=TGT[entity];
+  const iM={HDEPL:['PFL Online','PFL Offline','PFL O2O','CWL','Fellowship','KS','PAT','Other Income'],BDEPL:['Shine Business Empowerment','Gain Workshop','Sales Empowerment Program','Other income'],VMBE:['Neelam','Syscon','Foresight','Therefore','New Client 1','New Client 2','Other income'],TCPL:['D2B Sales','D2C Sales','D2I Sales','Design Services','Consulting','Other income'],VMF:['FLIP (Internship Program)','PFL Scholarship Batch','CfH PCOD/PCOS','GAIN Workshop','Donations','Sponsorships','Other income']};
+  const eM={HDEPL:['Salaries — ops team','Director remuneration','Loan EMI — HDFC','Loan EMI — small','Loan EMI — TPO CC','Loan EMI — RBL','Professional fees','Marketing','Rent 208','Liability clearance','Office expenses','Other expenses'],BDEPL:['Salaries','Rent','Electricity','Groww EMI','Other expense'],VMBE:['TDS (10%)','Siddhant professional fee','Home rent','Fuel','Driver salary','EA staff','Silvester salary','Loan EMI','Other expense'],TCPL:['Manufacturing','Company Savings & Reserves','Delivery','Director Remuneration','Loans / EMIs','Office Rent','Office Supplies','Legal / Audit','Other expense'],VMF:['VMF Conference','FAB Conference','FLIP Program Costs','PFL Scholarship Costs','CfH Program Costs','Research Paper Publications','Annual Office/Admin','Annual Sponsors Drive Expenses','Other utilisation']};
+  const nK={HDEPL:'HDEPL NET',BDEPL:'BDEPL NET',VMBE:'VMBE NET (Surplus to Victor)',TCPL:'TCPL NET (pre-tax)',VMF:'VMF SURPLUS (Tax Exempt)'};
+  const inc=iM[entity]||[],exp=eM[entity]||[],nets=L.entityNets[entity]||A12();
+  const hdr=`<tr><th>Line Item</th>${MONTHS.map(m=>`<th>${m}</th>`).join('')}<th>FY Total</th></tr>`;
+  const mkR=lines=>lines.map(l=>{const v=gA(l),t=sumArr(v);return`<tr><td style="padding-left:18px;${t===0?'color:var(--text3)':''}">${l}</td>${v.map(x=>`<td>${x?inrF(x):'—'}</td>`).join('')}<td style="font-weight:600">${t?inrF(t):'—'}</td></tr>`}).join('');
+  const iT=inc.reduce((s,l)=>s+sumA(l),0),eT=exp.reduce((s,l)=>s+sumA(l),0),nT=sumArr(nets);
+  const hasDC=['HDEPL','BDEPL'].includes(entity);
+  const dcLines=['Direct costs — leading fee','Direct costs — materials','Direct costs — venue','Direct costs — food'];
+  const dcTotal=hasDC?dcLines.reduce((s,l)=>s+sumA(l),0):0;
+  const gpTotal=hasDC?iT-dcTotal:0;
+  const gmPct=hasDC&&iT>0?(gpTotal/iT)*100:0;
+  const directSection=hasDC?`
+    <div class="card"><div class="card-header"><div class="card-title">Direct Costs — Actuals</div><div class="card-sub">Vary per batch — no budget</div></div><div class="table-wrap"><table><thead>${hdr}</thead><tbody>
+    ${dcLines.map(l=>{const v=gA(l),t=sumArr(v);return`<tr><td style="padding-left:18px;${t===0?'color:var(--text3)':''}">${l}</td>${v.map(x=>`<td>${x?inrF(x):'—'}</td>`).join('')}<td style="font-weight:600">${t?inrF(t):'—'}</td></tr>`}).join('')}
+    <tr class="total-row"><td>TOTAL DIRECT COSTS</td>${MONTHS.map((_,i)=>`<td>${inrF(dcLines.reduce((s,l)=>s+(gA(l)[i]||0),0))}</td>`).join('')}<td>${inrF(dcTotal)}</td></tr>
+    <tr style="background:rgba(29,184,168,0.08)"><td style="font-weight:700;color:var(--teal)">GROSS PROFIT</td>${MONTHS.map((_,i)=>`<td style="font-weight:600;color:var(--teal)">${inrF(inc.reduce((s,l)=>s+(gA(l)[i]||0),0)-dcLines.reduce((s,l)=>s+(gA(l)[i]||0),0))}</td>`).join('')}<td style="font-weight:700;color:var(--teal)">${inrF(gpTotal)}</td></tr>
+    <tr><td style="color:var(--text3);padding-left:18px">GM%</td>${MONTHS.map((_,i)=>{const r=inc.reduce((s,l)=>s+(gA(l)[i]||0),0);const d=dcLines.reduce((s,l)=>s+(gA(l)[i]||0),0);return`<td class="muted-cell">${r>0?((r-d)/r*100).toFixed(1)+'%':'—'}</td>`}).join('')}<td class="${gmPct>=40?'pos-cell':gmPct>=20?'':'neg-cell'}">${iT>0?gmPct.toFixed(1)+'%':'—'}</td></tr>
+    </tbody></table></div></div>`:'';
+  document.getElementById('plContent').innerHTML=`
+    <div style="background:${color}18;border:1px solid ${color}40;border-radius:8px;padding:14px 18px;margin-bottom:16px;display:flex;justify-content:space-between">
+      <div><div style="font-family:var(--font-d);font-size:18px;color:${color}">${entity}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Actual figures — live from Sheet</div></div>
+      <div style="text-align:right"><div style="font-family:var(--font-m);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em">Monthly Target Net</div><div style="font-family:var(--font-d);font-size:20px;color:var(--text)">${inr(tgt.net)}</div></div>
+    </div>
+    <div class="card"><div class="card-header"><div class="card-title">Income — Actuals</div></div><div class="table-wrap"><table><thead>${hdr}</thead><tbody>${mkR(inc)}<tr class="total-row"><td>TOTAL INCOME</td>${MONTHS.map((_,i)=>`<td>${inrF(inc.reduce((s,l)=>s+(gA(l)[i]||0),0))}</td>`).join('')}<td>${inrF(iT)}</td></tr></tbody></table></div></div>
+    ${directSection}
+    <div class="card"><div class="card-header"><div class="card-title">${hasDC?'Indirect ':''}Expenses — Actuals</div></div><div class="table-wrap"><table><thead>${hdr}</thead><tbody>${mkR(exp)}<tr class="total-row"><td>TOTAL ${hasDC?'INDIRECT ':''}EXPENSES</td>${MONTHS.map((_,i)=>`<td>${inrF(exp.reduce((s,l)=>s+(gA(l)[i]||0),0))}</td>`).join('')}<td>${inrF(eT)}</td></tr></tbody></table></div></div>
+    <div class="card"><div class="card-header"><div class="card-title">Net — Actual vs Target</div></div><div class="table-wrap"><table><thead><tr><th></th>${MONTHS.map(m=>`<th>${m}</th>`).join('')}<th>FY Total</th></tr></thead><tbody>
+    <tr><td>Actual Net</td>${nets.map(v=>`<td class="${v>0?'pos-cell':v<0?'neg-cell':'muted-cell'}">${v?inrF(v):'—'}</td>`).join('')}<td class="${nT>0?'pos-cell':nT<0?'neg-cell':''}" style="font-weight:700">${inrF(nT)||'—'}</td></tr>
+    <tr><td style="color:var(--text3)">Monthly Target</td>${MONTHS.map(()=>`<td class="muted-cell">${inr(tgt.net)}</td>`).join('')}<td class="muted-cell">${inr(tgt.net*12)}</td></tr>
+    <tr class="total-row"><td>Variance</td>${nets.map(v=>{const vr=v-tgt.net;return`<td class="${v===0?'muted-cell':vr>=0?'var-good':'var-bad'}">${v===0?'—':(vr>=0?'+':'')+inr(vr)}</td>`}).join('')}<td class="${nT===0?'muted-cell':nT-tgt.net*12>=0?'var-good':'var-bad'}">${nT===0?'—':(nT-tgt.net*12>=0?'+':'')+inr(nT-tgt.net*12)}</td></tr>
+    </tbody></table></div></div>`}
+function renderVariance(){
+  const tabs=['HDEPL','BDEPL','VMBE','TCPL','VMF'];
+  document.getElementById('varTabs').innerHTML=tabs.map((e,i)=>`<div class="etab${i===0?' active':''}" onclick="switchVar(this,'${e}')">${e}</div>`).join('');
+  switchVar(document.querySelector('#varTabs .etab'),'HDEPL')}
+function switchVar(el,entity){
+  document.querySelectorAll('#varTabs .etab').forEach(t=>t.classList.remove('active'));el.classList.add('active');
+  const tgt=TGT[entity],color=EC[entity];
+  const mkVR=(lines,budgets)=>lines.map((l,idx)=>{
+    const tM=budgets[idx]||0,v=gA(l),ya=sumArr(v),yb=tM*12,yv=ya-yb;
+    const ach=yb>0?(ya/yb)*100:0;
+    return`<tr><td style="padding-left:18px">${l}</td><td class="muted-cell">${inr(tM)}</td>${v.map(x=>`<td class="${x>0?'':'muted-cell'}">${x?inrF(x):'—'}</td>`).join('')}<td class="${ya>0?'':'muted-cell'}">${ya?inrF(ya):'—'}</td><td class="muted-cell">${inrF(yb)}</td><td class="${ya===0?'muted-cell':yv>=0?'var-good':'var-bad'}">${ya===0?'—':(yv>=0?'+':'')+inr(yv)}</td><td>${ya>0?ragPill(ach):'<span class="muted-cell">—</span>'}</td></tr>`}).join('');
+  const hdr=`<tr><th>Line Item</th><th>Monthly Budget</th>${MONTHS.map(m=>`<th>${m}</th>`).join('')}<th>YTD Actual</th><th>YTD Budget</th><th>YTD Variance</th><th>Achievement</th></tr>`;
+  document.getElementById('varContent').innerHTML=`
+    <div style="border-left:2px solid ${color};padding-left:14px;margin-bottom:16px"><div style="font-family:var(--font-d);font-size:18px;color:${color}">${entity} — Budget vs Actual</div><div style="font-size:11px;color:var(--text3)">Green ≥90% · Amber 70–90% · Red &lt;70%</div></div>
+    <div class="card"><div class="card-header"><div class="card-title">Income</div></div><div class="table-wrap"><table><thead>${hdr}</thead><tbody>${mkVR(tgt.incLines,tgt.incBudgets)}</tbody></table></div></div>
+    <div class="card"><div class="card-header"><div class="card-title">Expenses</div></div><div class="table-wrap"><table><thead>${hdr}</thead><tbody>${mkVR(tgt.expHeads,tgt.expBudgets)}</tbody></table></div></div>`}
+function renderRatios(){
+  const ents=['HDEPL','BDEPL','VMBE','TCPL','VMF'];
+  const iK={HDEPL:'Total HDEPL Income',BDEPL:'Total BDEPL Income',VMBE:'Total VMBE Income',TCPL:'Total TCPL Income',VMF:'Total VMF Fund Generation'};
+  const eK={HDEPL:'Total HDEPL Expenses',BDEPL:'Total BDEPL Expenses',VMBE:'Total VMBE Expenses',TCPL:'Total TCPL Expenses',VMF:'Total VMF Utilisation'};
+  const tAR=ents.reduce((s,e)=>s+sumA(iK[e]),0),tAE=ents.reduce((s,e)=>s+sumA(eK[e]),0),tAN=ents.reduce((s,e)=>s+sumArr(L.entityNets[e]),0);
+  const tTR=ents.reduce((s,e)=>s+TGT[e].rev*12,0);
+  const lt=L.liabTotal||3188883;
+  const emiData=L.emiRows.length>0?L.emiRows:[{emi:32151},{emi:7264},{emi:17000},{emi:9413},{emi:125000},{emi:6914},{emi:17486}];
+  const emiTot=emiData.reduce((s,e)=>s+e.emi,0);
+  const gm=tAR>0?((tAR-tAE)/tAR)*100:0;
+  const bm=lt>0?Math.ceil(lt/200000):0;
+  document.getElementById('ratioGrid').innerHTML=[
+    {l:'Group Gross Margin',v:tAR>0?gm.toFixed(1)+'%':'—',n:'Revenue − Expenses / Revenue',c:gm>=40?'var(--green)':gm>=20?'var(--amber)':'var(--red)'},
+    {l:'Liability Burn Rate',v:bm+' months',n:'At ₹2L/month clearance budget',c:'var(--amber)'},
+    {l:'EMI / Revenue Ratio',v:tAR>0?((emiTot/tAR)*100).toFixed(1)+'%':'—',n:'Monthly EMI as % of revenue collected',c:tAR>0&&emiTot/tAR<0.15?'var(--green)':'var(--red)'},
+    {l:'Opp. Cost of Liabilities',v:inr(Math.round(lt*0.18/12))+'/mo',n:'@ 18% p.a. on total outstanding',c:'var(--red)'},
+    {l:'Revenue Achievement',v:tAR>0?(tAR/tTR*100).toFixed(1)+'%':'—',n:'YTD actual vs full year target',c:tAR>0&&tAR/tTR>=0.9?'var(--green)':'var(--amber)'},
+    {l:'Net Margin',v:tAR>0?((tAN/tAR)*100).toFixed(1)+'%':'—',n:'Net position / Revenue collected',c:tAN>0?'var(--green)':'var(--red)'},
+  ].map(r=>`<div class="ratio-card"><div class="ratio-label">${r.l}</div><div class="ratio-value" style="color:${r.c}">${r.v}</div><div class="ratio-note">${r.n}</div></div>`).join('');
+  const dcL=['Direct costs — leading fee','Direct costs — materials','Direct costs — venue','Direct costs — food'];
+  document.getElementById('scorecardBody').innerHTML=ents.map(e=>{
+    const aR=sumA(iK[e]),aE=sumA(eK[e]),aN=sumArr(L.entityNets[e]),tR=TGT[e].rev*12;
+    const hasDC=['HDEPL','BDEPL'].includes(e);
+    const dc=hasDC?dcL.reduce((s,l)=>s+sumA(l),0):0;
+    const gm=hasDC&&aR>0?((aR-dc)/aR)*100:aR>0?((aR-aE)/aR)*100:0;
+    const ach=tR>0?(aR/tR)*100:0,fcc=TGT[e].exp>0?aR/(TGT[e].exp*12)*100:0,nm=aR>0?(aN/aR)*100:0;
+    const h=ach>=90&&gm>=30?'var(--green)':ach>=70?'var(--amber)':'var(--red)';
+    return`<tr><td style="color:${EC[e]};font-weight:600">${e}</td><td class="${gm>=40?'pos-cell':gm>=20?'':'neg-cell'}">${aR>0?gm.toFixed(1)+'%':'—'}</td><td>${aR>0?ragPill(ach):'<span class="muted-cell">—</span>'}</td><td class="${fcc>=100?'pos-cell':fcc>=70?'':'neg-cell'}">${aR>0?fcc.toFixed(0)+'%':'—'}</td><td class="${nm>0?'pos-cell':nm<0?'neg-cell':'muted-cell'}">${aR>0?nm.toFixed(1)+'%':'—'}</td><td><span style="color:${h};font-size:14px">●</span></td></tr>`;
+  }).join('');
+  document.getElementById('debtAnalysis').innerHTML=`<div class="obl-stat"><span class="obl-stat-label">Total liabilities outstanding</span><span class="obl-stat-value" style="color:var(--red)">${inrF(lt)}</span></div><div class="obl-stat"><span class="obl-stat-label">30-day delay cost @ 18%</span><span class="obl-stat-value" style="color:var(--amber)">${inrF(Math.round(lt*0.18/365*30))}</span></div><div class="obl-stat"><span class="obl-stat-label">Annual opportunity cost @ 18%</span><span class="obl-stat-value" style="color:var(--red)">${inrF(Math.round(lt*0.18))}</span></div><div class="obl-stat"><span class="obl-stat-label">Monthly EMI burden</span><span class="obl-stat-value" style="color:var(--red)">${inrF(emiTot)}</span></div><div class="obl-stat"><span class="obl-stat-label">Total monthly debt service (EMI + clearance)</span><span class="obl-stat-value" style="color:var(--red)">${inrF(emiTot+200000)}</span></div>`}
+function renderLiabilities(){
+  const liabs=L.liabRows.length>0?L.liabRows:[],total=L.liabTotal||0;
+  document.getElementById('liabTotalBanner').innerHTML=`<div style="background:rgba(240,85,85,0.1);border:1px solid rgba(240,85,85,0.3);border-radius:8px;padding:16px 20px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-family:var(--font-m);font-size:9px;color:var(--text3);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px">Total Outstanding Liabilities</div><div style="font-family:var(--font-d);font-size:32px;color:var(--red)">${inrF(total)}</div></div><div style="text-align:right"><div style="font-family:var(--font-m);font-size:9px;color:var(--text3)">Opp. cost / year @ 18%</div><div style="font-family:var(--font-d);font-size:18px;color:var(--amber)">${inrF(Math.round(total*0.18))}</div></div></div>`;
+  document.getElementById('liabRunway').innerHTML=[200000,300000,500000].map(r=>`<div class="obl-stat"><span class="obl-stat-label">At ${inr(r)}/month</span><span class="obl-stat-value" style="color:var(--amber)">${Math.ceil(total/r)} months</span></div>`).join('');
+  const p1=liabs.filter(l=>l.pri==='P1');
+  document.getElementById('liabP1').innerHTML=p1.length>0?p1.map(l=>`<tr><td>${l.creditor}</td><td>${l.cat}</td><td class="neg-cell">${inrF(l.amt)}</td></tr>`).join('')+`<tr class="total-row"><td colspan="2">P1 Total</td><td>${inrF(p1.reduce((s,l)=>s+l.amt,0))}</td></tr>`:'<tr><td colspan="3" style="color:var(--text3);text-align:center;padding:16px">Refresh from Sheet</td></tr>';
+  document.getElementById('liabFull').innerHTML=liabs.length>0?liabs.map(l=>`<tr><td>${l.creditor}</td><td>${l.cat}</td><td>${priTag(l.pri)}</td><td class="neg-cell">${inrF(l.amt)}</td><td class="muted-cell" style="font-size:11px">${l.action||'—'}</td></tr>`).join('')+`<tr class="total-row"><td colspan="3">TOTAL OUTSTANDING</td><td class="neg-cell">${inrF(total)}</td><td></td></tr>`:'<tr><td colspan="5" style="color:var(--text3);text-align:center;padding:16px">Refresh from Sheet</td></tr>';
+  document.getElementById('liabOpp').innerHTML=`<div class="obl-stat"><span class="obl-stat-label">Total liabilities</span><span class="obl-stat-value">${inrF(total)}</span></div><div class="obl-stat"><span class="obl-stat-label">30-day delay cost</span><span class="obl-stat-value" style="color:var(--amber)">${inrF(Math.round(total*0.18/365*30))}</span></div><div class="obl-stat"><span class="obl-stat-label">60-day delay cost</span><span class="obl-stat-value" style="color:var(--amber)">${inrF(Math.round(total*0.18/365*60))}</span></div><div class="obl-stat"><span class="obl-stat-label">90-day delay cost</span><span class="obl-stat-value" style="color:var(--red)">${inrF(Math.round(total*0.18/365*90))}</span></div><div class="obl-stat" style="border-top:1px solid var(--border2);padding-top:10px;margin-top:4px"><span class="obl-stat-label" style="font-weight:600">Annual opp. cost</span><span class="obl-stat-value" style="color:var(--red);font-weight:700">${inrF(Math.round(total*0.18))}</span></div>`}
+function renderEMIs(){
+  const emiData=L.emiRows.length>0?L.emiRows:[{loan:'HDFC loan (₹41L principal)',entity:'HDEPL',emi:32151,due:'6th',note:'Outstanding ~₹38.5L'},{loan:'Small loan (HDFC)',entity:'HDEPL',emi:7264,due:'2nd',note:''},{loan:'TPO Conference CC',entity:'HDEPL',emi:17000,due:'11th',note:''},{loan:'RBL',entity:'HDEPL',emi:9413,due:'14th',note:''},{loan:'Mr Vishal EMI',entity:'HDEPL',emi:125000,due:'20th',note:''},{loan:'Groww loan',entity:'BDEPL',emi:6914,due:'5th',note:''},{loan:'VMBE Cred Cash',entity:'VMBE',emi:17486,due:'—',note:'Serviced through VMBE'}];
+  const tot=emiData.reduce((s,e)=>s+e.emi,0);
+  const hd=emiData.filter(e=>e.entity==='HDEPL').reduce((s,e)=>s+e.emi,0);
+  const ot=emiData.filter(e=>e.entity!=='HDEPL').reduce((s,e)=>s+e.emi,0);
+  document.getElementById('emiCards').innerHTML=`<div class="cmd-card red"><div class="cmd-label">Total EMI / Month</div><div class="cmd-value" style="color:var(--red)">${inrF(tot)}</div><div class="cmd-sub">Annual: ${inr(tot*12)}</div></div><div class="cmd-card" style="border-top:2px solid var(--hdepl)"><div class="cmd-label">HDEPL EMI</div><div class="cmd-value" style="color:var(--hdepl)">${inrF(hd)}</div><div class="cmd-sub">${emiData.filter(e=>e.entity==='HDEPL').length} obligations</div></div><div class="cmd-card" style="border-top:2px solid var(--purple)"><div class="cmd-label">BDEPL + VMBE</div><div class="cmd-value" style="color:var(--purple)">${inrF(ot)}</div><div class="cmd-sub">${emiData.filter(e=>e.entity!=='HDEPL').length} obligations</div></div>`;
+  document.getElementById('emiTable').innerHTML=emiData.map(e=>`<tr><td>${e.loan}</td><td style="color:${EC[e.entity]||'var(--text2)'};font-weight:600">${e.entity}</td><td class="neg-cell">${inrF(e.emi)}</td><td class="muted-cell">${e.due}</td><td class="muted-cell" style="font-size:11px">${e.note||'—'}</td></tr>`).join('')+`<tr class="total-row"><td colspan="2">TOTAL EMI / MONTH</td><td class="neg-cell">${inrF(tot)}</td><td colspan="2"></td></tr>`;
+  document.getElementById('emiDebt').innerHTML=`<div class="obl-stat"><span class="obl-stat-label">Monthly EMI burden</span><span class="obl-stat-value" style="color:var(--red)">${inrF(tot)}</span></div><div class="obl-stat"><span class="obl-stat-label">Annual EMI burden</span><span class="obl-stat-value">${inrF(tot*12)}</span></div><div class="obl-stat"><span class="obl-stat-label">EMI + Liability clearance / month</span><span class="obl-stat-value" style="color:var(--red)">${inrF(tot+200000)}</span></div><div class="obl-stat"><span class="obl-stat-label">As % of group monthly rev target</span><span class="obl-stat-value">${((tot/Object.values(TGT).reduce((s,t)=>s+t.rev,0))*100).toFixed(1)}%</span></div>`}
+function renderEntityPages(){
+  const iK={HDEPL:'Total HDEPL Income',BDEPL:'Total BDEPL Income',VMBE:'Total VMBE Income',TCPL:'Total TCPL Income',VMF:'Total VMF Fund Generation'};
+  const eK={HDEPL:'Total HDEPL Expenses',BDEPL:'Total BDEPL Expenses',VMBE:'Total VMBE Expenses',TCPL:'Total TCPL Expenses',VMF:'Total VMF Utilisation'};
+  [{id:'hdepl',e:'HDEPL',name:'Human Development & Education Pvt Ltd'},{id:'bdepl',e:'BDEPL',name:'Business Development & Education Pvt Ltd'},{id:'vmbe',e:'VMBE',name:'Victor Manickam Business Entity'},{id:'tcpl',e:'TCPL',name:'Trox Creations Pvt Ltd'},{id:'vmf',e:'VMF',name:'Victor Manickam Foundation (Section 8)'}].forEach(({id,e,name})=>{
+    const color=EC[e],nets=L.entityNets[e]||A12(),nt=sumArr(nets),tgt=TGT[e];
+    const aR=sumA(iK[e]),aE=sumA(eK[e]);
+    const gm=aR>0?((aR-aE)/aR)*100:0,ach=tgt.rev*12>0?(aR/(tgt.rev*12))*100:0;
+    const mx=Math.max(...nets.map(Math.abs),1);
+    const bars=nets.map((v,i)=>{const h=Math.round((Math.abs(v)/mx)*80);const c=v>=0?color:'var(--red)';return`<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1"><div style="width:100%;height:80px;display:flex;align-items:flex-end"><div style="width:100%;height:${h}px;background:${c};border-radius:3px 3px 0 0" title="${MON_S[i]}: ${inr(v)}"></div></div><div style="font-family:var(--font-m);font-size:9px;color:var(--text3)">${MON_S[i]}</div></div>`}).join('');
+    document.getElementById(id+'Detail').innerHTML=`
+      <div style="background:${color}18;border:1px solid ${color}40;border-radius:8px;padding:16px 20px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+        <div><div style="font-family:var(--font-d);font-size:20px;color:${color}">${e}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${name}</div></div>
+        <div style="display:flex;gap:20px">
+          <div style="text-align:right"><div style="font-family:var(--font-m);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em">Actual Net YTD</div><div style="font-family:var(--font-d);font-size:22px;color:${nt>=0?'var(--green)':'var(--red)'}">${inr(nt)}</div></div>
+          <div style="text-align:right"><div style="font-family:var(--font-m);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em">GM%</div><div style="font-family:var(--font-d);font-size:22px;color:${gm>=40?'var(--green)':gm>=20?'var(--amber)':'var(--red)'}">${aR>0?gm.toFixed(1)+'%':'—'}</div></div>
+          <div style="text-align:right"><div style="font-family:var(--font-m);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em">Achievement</div><div style="font-family:var(--font-d);font-size:22px;color:${ach>=90?'var(--green)':ach>=70?'var(--amber)':'var(--red)'}">${aR>0?ach.toFixed(0)+'%':'—'}</div></div>
+        </div>
+      </div>
+      <div class="card"><div class="card-header"><div class="card-title">Monthly Net — Actual</div></div><div style="padding:20px;display:flex;gap:6px;align-items:flex-end">${bars}</div></div>
+      <div class="card"><div style="padding:20px;text-align:center">
+        <p style="color:var(--text3);margin-bottom:12px;font-size:12px">View full breakdown and variance</p>
+        <button onclick="document.querySelector('[data-sec=pl]').click();setTimeout(()=>document.querySelectorAll('#plTabs .etab').forEach(t=>{if(t.textContent==='${e}')switchPL(t,'${e}')}),100)" style="padding:9px 22px;background:${color};color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:var(--font-b);font-weight:600;font-size:12px;margin-right:8px">Full P&L →</button>
+        <button onclick="document.querySelector('[data-sec=variance]').click();setTimeout(()=>document.querySelectorAll('#varTabs .etab').forEach(t=>{if(t.textContent==='${e}')switchVar(t,'${e}')}),100)" style="padding:9px 22px;background:transparent;color:${color};border:1px solid ${color};border-radius:6px;cursor:pointer;font-family:var(--font-b);font-weight:600;font-size:12px">Budget vs Actual →</button>
+      </div></div>`})}
+function renderAll(){renderCmd();renderPL();renderVariance();renderRatios();renderLiabilities();renderEMIs();renderEntityPages()}
+async function loadData(){
+  document.getElementById('loaderMsg').textContent='Fetching from Google Sheets…';
+  try{const data=await fetchSheet();parseSheet(data);document.getElementById('syncDot').classList.add('live');document.getElementById('syncText').textContent='Live · '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});document.getElementById('errBanner').classList.remove('show');renderAll()}
+  catch(err){document.getElementById('syncDot').classList.remove('live');document.getElementById('syncText').textContent='Offline';document.getElementById('errBanner').innerHTML='⚠ Could not connect. Showing static data. Error: '+err.message;document.getElementById('errBanner').classList.add('show');renderAll()}}
+window.addEventListener('load',()=>{renderAll();loadData().finally(()=>setTimeout(()=>document.getElementById('loader').classList.add('hidden'),2000))});
+</script>
+</body>
+</html>
